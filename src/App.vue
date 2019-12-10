@@ -1,51 +1,46 @@
+<script>
+import VidoeRtmp from '@/components/VidoeRtmp'
+
+export default {
+  mounted() {},
+  components: { VidoeRtmp },
+  data() {
+    return {
+      urlList: [
+        {
+          id: 'live17',
+          url: 'rtmp://isxsports.com/dext/live17',
+        },
+        {
+          id: 'live16',
+          url: 'rtmp://isxsports.com/dext/live16',
+        },
+        {
+          id: 'live15',
+          url: 'rtmp://isxsports.com/dext/live15',
+        },
+        {
+          id: 'live14',
+          url: 'rtmp://isxsports.com/dext/live14',
+        },
+      ],
+    }
+  },
+  methods: {},
+}
+</script>
+
 <template>
   <div id="app">
-    <img src="./assets/logo.png" />
-    <!-- <video
-      id="my-player"
-      class="video-js"
-      controls
-      preload="auto"
-      data-setup="{}"
-      width="500"
-      height="400"
-    >
-      <source src="rtmp://isxsports.com/dext/live" type="rtmp/flv" />
-    </video> -->
-    <video
-      id="my-video"
-      class="video-js"
-      controls
-      preload="auto"
-      width="640"
-      height="440"
-      poster="MY_VIDEO_POSTER.jpg"
-      data-setup="{}"
-    >
-      <source src="rtmp://58.200.131.2:1935/livetv/gxtv" type="rtmp/flv" />
-      <!-- <source src="http://vjs.zencdn.net/v/oceans.webm" type="video/webm" />
-      <source src="http://vjs.zencdn.net/v/oceans.ogv" type="video/ogg" /> -->
-    </video>
+    <div class="videoList">
+      <VidoeRtmp v-for="item in urlList" :url="item.url" :id="item.id" :key="item.id" />
+    </div>
   </div>
 </template>
 
-<script>
-export default {
-  mounted() {
-    var options = {};
-    var myPlayer = videojs("my-video");
-    videojs("my-video").ready(function() {
-      var myPlayer = this;
-      myPlayer.play();
-    });
-  },
-  methods: {}
-};
-</script>
-
 <style>
 #app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
