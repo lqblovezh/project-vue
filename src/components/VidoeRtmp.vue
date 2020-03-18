@@ -2,21 +2,31 @@
   <div class="video">
     <video
       :id="id"
+      ref="player"
       class="video-js"
       controls
       autoplay="true"
       preload="auto"
       width="640"
-      height="440"
+      height="auto"
       poster="MY_VIDEO_POSTER.jpg"
       data-setup="{}"
+      :src="url"
     >
       <source :src="url" type="rtmp/flv" />
     </video>
+    <!-- <el-input v-model="test"></el-input>
+    <el-button @click="sendText">发送</el-button> -->
+    <!-- <video ref="player"></video> -->
+    <!-- <el-button @click="getUrl()">发送</el-button>
+    <el-button @click="closeUrl()">关闭</el-button>
+    <canvas :id="id" width="600" height="400"></canvas> -->
   </div>
 </template>
 
 <script>
+import ip from 'ip'
+
 export default {
   props: {
     url: {
@@ -31,10 +41,39 @@ export default {
   data() {
     return {
       myPlayer: null,
+      test: '',
+      ws: null,
     }
+  },
+  methods: {
+    sendText() {
+      console.log('send->' + this.test)
+      this.ws.send(this.test)
+    },
+    getUrl(url) {
+      this.axios
+        .post('/port', {
+          url: 'rtsp://admin:dwxt2019@192.168.1.31:554/h265/ch1/main/av_stream',
+        })
+        .then(res => {
+          console.log(res, 1111)
+          let canvas = document.getElementById(this.id)
+          var url = 'ws://192.168.1.64:2700'
+          this.myPlayer = new JSMpeg.Player(url, {
+            canvas: canvas,
+            videoBufferSize: 600 * 400,
+            audioBufferSize: 600 * 400,
+          })
+        })
+    },
+    closeUrl() {
+      console.log(this.myPlayer);
+      this.axios.get('/port/stop')
+    },
   },
   mounted() {
     setTimeout(() => {
+      console.log(this.id)
       this.myPlayer = videojs(this.id, { autoplay: true })
       this.myPlayer.ready(function() {
         console.log('------------')
@@ -42,11 +81,14 @@ export default {
         setTimeout(() => {
           myPlayer.pause()
           myPlayer.play()
-        }, 500)
+        }, 600)
       })
     }, 200)
   },
-  methods: {},
+  beforeDestroy() {
+    // this.myPlayer.dispose()
+    this.myPlayer && this.myPlayer.destory()
+  },
 }
 </script>
 

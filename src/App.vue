@@ -17,7 +17,7 @@ export default {
         },
         {
           id: 'live15',
-          url: 'rtmp://isxsports.com/dext/live15',
+          url: 'rtmp://isxsports.com/dext/live18',
         },
         {
           id: 'live14',
@@ -32,9 +32,10 @@ export default {
 
 <template>
   <div id="app">
-    <div class="videoList">
+    <!-- <div class="videoList">
       <VidoeRtmp v-for="item in urlList" :url="item.url" :id="item.id" :key="item.id" />
-    </div>
+    </div> -->
+    <router-view></router-view>
   </div>
 </template>
 
