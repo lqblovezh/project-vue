@@ -1,17 +1,32 @@
 <template>
   <div class="image">
-    <div class="imgbox">
-      <img class="img1" :src="img1" alt />
+    <div class="imgbox" :style="{width: baseWidth,height: baseHeight}">
+      <img class="img1" @load.once="loadImage" ref="img1" :src="img1" />
+      <div
+        class="box"
+        v-if="img1 && !firstImgLoad"
+        :style="{width: contrastWidth,height: contrastHeight,top:contrastTop,left:contrastLeft}"
+      ></div>
       <VueDragResize
         class="drag"
-        :style="'backgroundImage:url('+img2+')'"
+        v-if="img1 && !firstImgLoad"
         :isActive="true"
-        :w="300"
-        :h="300"
+        :w="img2Weight"
+        :h="img2Height"
+        :x="left"
+        :y="top"
         @resizing="resize"
-      ></VueDragResize>
+        @dragstop="resize"
+      >
+        <img :src="img2" :width="img2Weight" :height="img2Height" alt />
+      </VueDragResize>
     </div>
-    <button v-if="isShowBtn" @click="save">确认</button>
+    <div class="eare">
+      <input type="number" v-model="grab" />
+      <input type="number" v-model="wendu" />
+      <button @click="grabClick">grab</button>
+      <button @click="save" v-if="isShowBtn">确认</button>
+    </div>
   </div>
 </template>
 
@@ -22,71 +37,126 @@ export default {
   components: {
     VueDragResize,
   },
-  created() {
-    let baseUrl = 'ws://192.168.1.32:8008/img?id=123456'
-    let webSocket = new WebSocket(baseUrl)
-    webSocket.onopen = function(e) {
-      console.log('webSocket is open')
-    }
-    webSocket.onmessage = function(e) {
-      this.img1 = e.data.img1
-      this.img2 = e.data.img2
-    }
-    webSocket.onclose = function(e) {
-      console.log('webSocket is close')
-    }
-  },
   data() {
     return {
       isShowBtn: false,
+      grab: 1,
+      wendu: 0,
+      firstImgLoad: true,
+      contrastHeight: '',
+      contrastWidth: '',
+      img2Weight: 600,
+      img2Height: 300,
+      baseWidth: '900px',
+      baseHeight: '450px',
       img1: '',
       img2: '',
-      left: Number, //组件的X位置
-      top: Number, //组件的Y位置
-      width: Number, //组件的宽度
-      height: Number, //组件的高度
+      webSocket: null,
+      left: 0, //组件的X位置
+      top: 0, //组件的Y位置
+      width: null, //组件的宽度
+      height: null, //组件的高度
     }
+  },
+  mounted() {
+    this.$nextTick(() => {
+      let baseUrl = 'ws://192.168.1.32:8008/img?id=123456'
+      this.webSocket = new WebSocket(baseUrl)
+      this.webSocket.onopen = e => {
+        console.log('webSocket is open')
+      }
+      this.webSocket.onmessage = e => {
+        const { img1, img2, box } = JSON.parse(e.data)
+        if (img1) {
+          this.img1 = img1
+        }
+        if (img2) {
+          this.img2 = img2
+        }
+        if (box) {
+          this.img2Weight = this.width = box.width
+          this.img2Height = this.height = box.height
+          this.contrastHeight = box.height + 'px'
+          this.contrastWidth = box.width + 'px'
+          this.contrastLeft = box.left + 'px'
+          this.contrastTop = box.top + 'px'
+          this.top = box.top
+          this.left = box.left
+        }
+      }
+      this.webSocket.onclose = e => {
+        console.log('webSocket is close')
+      }
+    })
   },
   methods: {
     resize(newRect) {
-      this.width = newRect.width
-      this.height = newRect.height
+      console.log(newRect.top, newRect.left)
+      this.img2Weight = this.width = newRect.width
+      this.img2Height = this.height = newRect.height
       this.top = newRect.top
       this.left = newRect.left
       this.isShowBtn = true
     },
     save() {
-      this.axios
-        .post('api/getData.php', {
-          params: {
-            title: '眼镜',
+      console.log(this.left, this.top)
+      this.contrastHeight = this.height + 'px'
+      this.contrastWidth = this.width + 'px'
+      this.contrastLeft = this.left + 'px'
+      this.contrastTop = this.top + 'px'
+      this.webSocket.send(
+        JSON.stringify({
+          box: {
+            left: this.left,
+            top: this.top,
+            width: this.width,
+            height: this.height,
           },
         })
-        .then(res => {
-          console.log(res)
+      )
+    },
+    grabClick() {
+      this.webSocket.send(
+        JSON.stringify({
+          grab: this.grab,
+          wendu: this.wendu,
         })
+      )
+    },
+    loadImage(e) {
+      this.baseWidth = this.$refs.img1.clientWidth + 'px'
+      this.baseHeight = this.$refs.img1.clientHeight + 'px'
+      this.$nextTick(() => {
+        this.firstImgLoad = false
+      })
     },
   },
 }
 </script>
 
 <style>
+.box {
+  position: absolute;
+  border: 1px solid blue;
+}
 .drag {
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
+  opacity: 0.9;
 }
 .imgbox {
   position: relative;
-  width: 600px;
-  height: 300px;
+  width: 960px;
+  height: 540px;
   border: 1px solid #000;
   box-sizing: border-box;
+  margin: 0 auto;
 }
 .img1,
 .img2 {
-  max-width: 600px;
-  max-height: 300px;
+  max-width: 960px;
+  max-height: 540px;
 }
 .img2 {
   position: absolute;

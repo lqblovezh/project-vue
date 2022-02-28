@@ -1,100 +1,62 @@
 <template>
   <div class="video">
-    <video
-      :id="id"
-      ref="player"
-      class="video-js"
-      controls
-      autoplay="true"
-      preload="auto"
-      width="640"
-      height="auto"
-      poster="MY_VIDEO_POSTER.jpg"
-      data-setup="{}"
-      :src="url"
-    >
-      <source :src="url" type="rtmp/flv" />
-    </video>
-    <!-- <el-input v-model="test"></el-input>
-    <el-button @click="sendText">发送</el-button> -->
-    <!-- <video ref="player"></video> -->
-    <!-- <el-button @click="getUrl()">发送</el-button>
-    <el-button @click="closeUrl()">关闭</el-button>
-    <canvas :id="id" width="600" height="400"></canvas> -->
+    <videoPlayer ref="myPlayer" class="vjs-custom-skin videoPlayer" :options="playerOptions"></videoPlayer>
   </div>
 </template>
 
 <script>
-import ip from 'ip'
-
+import 'video.js/dist/video-js.css'
+import videoPlayer from 'vue-video-player/src/player.vue'
+import 'videojs-flash'
 export default {
+  components: { videoPlayer },
   props: {
     url: {
       type: String,
-      default: 'rtmp://isxsports.com/dext/live14',
-    },
-    id: {
-      type: String,
-      default: 'my-video',
+      default: 'rtmp://isxsports.com/dext/live20',
     },
   },
   data() {
     return {
       myPlayer: null,
-      test: '',
-      ws: null,
+      playerOptions: {
+        loop: false,
+        sources: [{ type: 'rtmp/mp4', src: this.url }],
+        techOrder: ['flash', 'html5'],
+        notSupportedMessage: '此视频暂无法播放，请稍后再试',
+        fluid: true,
+        autoplay: true,
+        controlBar: {
+          timeDivider: true,
+          durationDisplay: true,
+          remainingTimeDisplay: false,
+          fullscreenToggle: true, //全屏按钮
+        },
+      },
     }
   },
-  methods: {
-    sendText() {
-      console.log('send->' + this.test)
-      this.ws.send(this.test)
-    },
-    getUrl(url) {
-      this.axios
-        .post('/port', {
-          url: 'rtsp://admin:dwxt2019@192.168.1.31:554/h265/ch1/main/av_stream',
-        })
-        .then(res => {
-          console.log(res, 1111)
-          let canvas = document.getElementById(this.id)
-          var url = 'ws://192.168.1.64:2700'
-          this.myPlayer = new JSMpeg.Player(url, {
-            canvas: canvas,
-            videoBufferSize: 600 * 400,
-            audioBufferSize: 600 * 400,
-          })
-        })
-    },
-    closeUrl() {
-      console.log(this.myPlayer);
-      this.axios.get('/port/stop')
-    },
-  },
+  methods: {},
   mounted() {
-    setTimeout(() => {
-      console.log(this.id)
-      this.myPlayer = videojs(this.id, { autoplay: true })
-      this.myPlayer.ready(function() {
-        console.log('------------')
-        var myPlayer = this
-        setTimeout(() => {
-          myPlayer.pause()
-          myPlayer.play()
-        }, 600)
-      })
-    }, 200)
+    // setTimeout(() => {
+    //   console.log(this.id)
+    //   this.myPlayer = videojs(this.id, { autoplay: true })
+    //   this.myPlayer.ready(function () {
+    //     var myPlayer = this
+    //     setTimeout(() => {
+    //       myPlayer.pause()
+    //       myPlayer.play()
+    //     }, 600)
+    //   })
+    // }, 200)
   },
   beforeDestroy() {
-    // this.myPlayer.dispose()
-    this.myPlayer && this.myPlayer.destory()
+    this.$refs.myPlayer.dispose()
   },
 }
 </script>
 
 <style>
 .video {
-  width: 50%;
-  display: inline-block;
+  width: 85%;
 }
 </style>
